@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game.Command;
+using Dalamud.Game.Gui;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Interface.Windowing;
@@ -22,6 +23,9 @@ namespace FindersFilter
         [PluginService]
         [RequiredVersion("1.0")]
         public static CommandManager CommandManager { get; private set; } = null!;
+        [PluginService]
+        [RequiredVersion("1.0")]
+        public static GameGui GameGui { get; private set; } = null!;
         
         public static Configuration Configuration { get; set; }
         
@@ -34,7 +38,8 @@ namespace FindersFilter
 
         private readonly WindowSystem WindowSystem = new("FindersFilter");
         private ConfigWindow ConfigWindow { get; init; }
-
+        private OverlayUi OverlayUi;
+        
         public Plugin(
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
             [RequiredVersion("1.0")] CommandManager commandManager)
@@ -44,6 +49,7 @@ namespace FindersFilter
             // you might normally want to embed resources and load them from the manifest stream
 
             ConfigWindow = new ConfigWindow();
+            OverlayUi = new OverlayUi();
             
             WindowSystem.AddWindow(ConfigWindow);
 
@@ -61,6 +67,7 @@ namespace FindersFilter
             this.WindowSystem.RemoveAllWindows();
             
             ConfigWindow.Dispose();
+            OverlayUi.Dispose();
             
             Dalamud.CommandManager.RemoveHandler(CommandName);
         }
@@ -72,7 +79,8 @@ namespace FindersFilter
 
         private void DrawUI()
         {
-            this.WindowSystem.Draw();
+            WindowSystem.Draw();
+            OverlayUi.Draw();
         }
 
         public void DrawConfigUI()
