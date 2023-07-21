@@ -7,9 +7,9 @@ namespace FindersFilter.Windows;
 
 public class ConfigWindow : Window, IDisposable
 {
-    private Configuration Configuration;
+    private readonly Configuration configuration;
 
-    public ConfigWindow(Plugin plugin) : base(
+    public ConfigWindow() : base(
         "A Wonderful Configuration Window",
         ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
         ImGuiWindowFlags.NoScrollWithMouse)
@@ -17,7 +17,7 @@ public class ConfigWindow : Window, IDisposable
         this.Size = new Vector2(232, 75);
         this.SizeCondition = ImGuiCond.Always;
 
-        this.Configuration = plugin.Configuration;
+        this.configuration = Dalamud.Configuration;
     }
 
     public void Dispose() { }
@@ -25,12 +25,12 @@ public class ConfigWindow : Window, IDisposable
     public override void Draw()
     {
         // can't ref a property, so use a local copy
-        var configValue = this.Configuration.SomePropertyToBeSavedAndWithADefault;
+        var configValue = this.configuration.SomePropertyToBeSavedAndWithADefault;
         if (ImGui.Checkbox("Random Config Bool", ref configValue))
         {
-            this.Configuration.SomePropertyToBeSavedAndWithADefault = configValue;
+            this.configuration.SomePropertyToBeSavedAndWithADefault = configValue;
             // can save immediately on change, if you don't want to provide a "Save and Close" button
-            this.Configuration.Save();
+            this.configuration.Save();
         }
     }
 }

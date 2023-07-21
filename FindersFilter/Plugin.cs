@@ -1,52 +1,59 @@
 ﻿using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using System.IO;
 using Dalamud.Interface.Windowing;
 using FindersFilter.Windows;
 
 namespace FindersFilter
 {
+    public class Dalamud
+    {
+        public static void Initialize(DalamudPluginInterface pluginInterface)
+        {
+            pluginInterface.Create<Dalamud>();
+            
+            Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+            Configuration.Initialize(pluginInterface);
+        }
+
+        [PluginService]
+        [RequiredVersion("1.0")]
+        public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
+        [PluginService]
+        [RequiredVersion("1.0")]
+        public static CommandManager CommandManager { get; private set; } = null!;
+        
+        public static Configuration Configuration { get; set; }
+        
+    }
+    
     public sealed class Plugin : IDalamudPlugin
     {
         public string Name => "Sample Plugin";
         private const string CommandName = "/pmycommand";
 
-        private DalamudPluginInterface PluginInterface { get; init; }
-        private CommandManager CommandManager { get; init; }
-        public Configuration Configuration { get; init; }
-        public WindowSystem WindowSystem = new("FindersFilter");
-
+        private readonly WindowSystem WindowSystem = new("FindersFilter");
         private ConfigWindow ConfigWindow { get; init; }
-        private MainWindow MainWindow { get; init; }
 
         public Plugin(
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
             [RequiredVersion("1.0")] CommandManager commandManager)
         {
-            this.PluginInterface = pluginInterface;
-            this.CommandManager = commandManager;
-
-            this.Configuration = this.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-            this.Configuration.Initialize(this.PluginInterface);
+            Dalamud.Initialize(pluginInterface);
 
             // you might normally want to embed resources and load them from the manifest stream
-            var imagePath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "goat.png");
-            var goatImage = this.PluginInterface.UiBuilder.LoadImage(imagePath);
 
-            ConfigWindow = new ConfigWindow(this);
-            MainWindow = new MainWindow(this, goatImage);
+            ConfigWindow = new ConfigWindow();
             
             WindowSystem.AddWindow(ConfigWindow);
-            WindowSystem.AddWindow(MainWindow);
 
-            this.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
+            Dalamud.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
             {
                 HelpMessage = "A useful message to display in /xlhelp"
             });
 
-            this.PluginInterface.UiBuilder.Draw += DrawUI;
-            this.PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
+            pluginInterface.UiBuilder.Draw += DrawUI;
+            pluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
         }
 
         public void Dispose()
@@ -54,15 +61,13 @@ namespace FindersFilter
             this.WindowSystem.RemoveAllWindows();
             
             ConfigWindow.Dispose();
-            MainWindow.Dispose();
             
-            this.CommandManager.RemoveHandler(CommandName);
+            Dalamud.CommandManager.RemoveHandler(CommandName);
         }
 
         private void OnCommand(string command, string args)
         {
-            // in response to the slash command, just display our main ui
-            MainWindow.IsOpen = true;
+            // TODO
         }
 
         private void DrawUI()
