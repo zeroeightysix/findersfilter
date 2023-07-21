@@ -4,7 +4,7 @@ using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using ImGuiScene;
 
-namespace SamplePlugin.Windows;
+namespace FindersFilter.Windows;
 
 public class MainWindow : Window, IDisposable
 {
