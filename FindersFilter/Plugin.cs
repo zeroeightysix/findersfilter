@@ -7,86 +7,85 @@ using Dalamud.Plugin;
 using Dalamud.Interface.Windowing;
 using FindersFilter.Windows;
 
-namespace FindersFilter
+namespace FindersFilter;
+
+public class Dalamud
 {
-    public class Dalamud
+    public static void Initialize(DalamudPluginInterface pluginInterface)
     {
-        public static void Initialize(DalamudPluginInterface pluginInterface)
-        {
-            pluginInterface.Create<Dalamud>();
+        pluginInterface.Create<Dalamud>();
             
-            Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-        }
-
-        [PluginService]
-        public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
-        [PluginService]
-        public static CommandManager CommandManager { get; private set; } = null!;
-        [PluginService]
-        public static GameGui GameGui { get; private set; } = null!;
-        [PluginService]
-        public static PartyFinderGui PartyFinderGui { get; private set; } = null!;
-        [PluginService]
-        public static DataManager DataManager { get; private set; } = null!;
-
-        public static Configuration Configuration { get; set; } = null!;
     }
+
+    [PluginService]
+    public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
+    [PluginService]
+    public static CommandManager CommandManager { get; private set; } = null!;
+    [PluginService]
+    public static GameGui GameGui { get; private set; } = null!;
+    [PluginService]
+    public static PartyFinderGui PartyFinderGui { get; private set; } = null!;
+    [PluginService]
+    public static DataManager DataManager { get; private set; } = null!;
+}
     
-    // ReSharper disable once UnusedType.Global
-    public sealed class Plugin : IDalamudPlugin
-    {
-        public string Name => "FindersFilter";
+// ReSharper disable once UnusedType.Global
+public sealed class Plugin : IDalamudPlugin
+{
+    public string Name => "FindersFilter";
 
-        private readonly WindowSystem windowSystem = new("FindersFilter");
-        private ConfigWindow ConfigWindow { get; init; }
-        private readonly OverlayUi overlayUi;
-        private Filter filter;
+    private readonly WindowSystem windowSystem = new("FindersFilter");
+    private ConfigWindow ConfigWindow { get; init; }
+    private readonly OverlayUi overlayUi;
+    public Configuration Configuration { get; set; }
+    private Filter filter;
         
-        public Plugin(DalamudPluginInterface pluginInterface)
-        {
-            Dalamud.Initialize(pluginInterface);
-
-            // you might normally want to embed resources and load them from the manifest stream
-
-            ConfigWindow = new ConfigWindow();
-            overlayUi = new OverlayUi();
-            filter = new Filter();
+    public Plugin(DalamudPluginInterface pluginInterface)
+    {
+        Dalamud.Initialize(pluginInterface);
             
-            windowSystem.AddWindow(ConfigWindow);
+        this.Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
-            Dalamud.CommandManager.AddHandler("/ffilter", new CommandInfo(OnCommand)
-            {
-                HelpMessage = "Open the FindersFilter configuration window"
-            });
+        // you might normally want to embed resources and load them from the manifest stream
 
-            pluginInterface.UiBuilder.Draw += DrawUI;
-            pluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
-        }
-
-        public void Dispose()
-        {
-            this.windowSystem.RemoveAllWindows();
+        ConfigWindow = new ConfigWindow(this.Configuration);
+        overlayUi = new OverlayUi();
+        filter = new Filter();
             
-            ConfigWindow.Dispose();
-            overlayUi.Dispose();
+        windowSystem.AddWindow(ConfigWindow);
+
+        Dalamud.CommandManager.AddHandler("/ffilter", new CommandInfo(OnCommand)
+        {
+            HelpMessage = "Open the FindersFilter configuration window"
+        });
+
+        pluginInterface.UiBuilder.Draw += DrawUI;
+        pluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
+    }
+
+    public void Dispose()
+    {
+        this.windowSystem.RemoveAllWindows();
             
-            Dalamud.CommandManager.RemoveHandler("/ffilter");
-        }
+        ConfigWindow.Dispose();
+        overlayUi.Dispose();
+            
+        Dalamud.CommandManager.RemoveHandler("/ffilter");
+    }
 
-        private void DrawUI()
-        {
-            windowSystem.Draw();
-            overlayUi.Draw();
-        }
+    private void DrawUI()
+    {
+        windowSystem.Draw();
+        overlayUi.Draw();
+    }
 
-        private void OnCommand(string command, string args)
-        {
-            DrawConfigUI();
-        }
+    private void OnCommand(string command, string args)
+    {
+        DrawConfigUI();
+    }
 
-        public void DrawConfigUI()
-        {
-            ConfigWindow.IsOpen = true;
-        }
+    public void DrawConfigUI()
+    {
+        ConfigWindow.IsOpen = true;
     }
 }

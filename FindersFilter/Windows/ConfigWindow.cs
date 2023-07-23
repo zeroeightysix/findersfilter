@@ -9,15 +9,11 @@ public class ConfigWindow : Window, IDisposable
 {
     private readonly Configuration configuration;
 
-    public ConfigWindow() : base(
-        "A Wonderful Configuration Window",
-        ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
-        ImGuiWindowFlags.NoScrollWithMouse)
+    public ConfigWindow(Configuration config) : base(
+        "FindersFilter"
+    )
     {
-        this.Size = new Vector2(232, 75);
-        this.SizeCondition = ImGuiCond.Always;
-
-        this.configuration = Dalamud.Configuration;
+        this.configuration = config;
     }
 
     public void Dispose() { }
