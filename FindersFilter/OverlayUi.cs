@@ -38,8 +38,11 @@ public class OverlayUi : IDisposable
                         ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoScrollWithMouse |
                         ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoBackground))
         {
-            var b = false;
-            ImGui.Checkbox("Show only parties you can join", ref b);
+            var b = Dalamud.Configuration.PartyMakeupFilter;
+            if (ImGui.Checkbox("Show only parties you can join", ref b))
+            {
+                Dalamud.Configuration.PartyMakeupFilter = b;
+            }
         }
 
         ImGui.PopStyleVar(5);

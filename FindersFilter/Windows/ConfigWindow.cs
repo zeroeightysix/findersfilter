@@ -25,10 +25,10 @@ public class ConfigWindow : Window, IDisposable
     public override void Draw()
     {
         // can't ref a property, so use a local copy
-        var configValue = this.configuration.SomePropertyToBeSavedAndWithADefault;
-        if (ImGui.Checkbox("Random Config Bool", ref configValue))
+        var configValue = this.configuration.PartyMakeupFilter;
+        if (ImGui.Checkbox("Filter PF entries based on current party", ref configValue))
         {
-            this.configuration.SomePropertyToBeSavedAndWithADefault = configValue;
+            this.configuration.PartyMakeupFilter = configValue;
             // can save immediately on change, if you don't want to provide a "Save and Close" button
             this.configuration.Save();
         }
