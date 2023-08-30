@@ -7,6 +7,13 @@ namespace FindersFilter;
 
 public class OverlayUi : IDisposable
 {
+    private readonly Configuration configuration;
+
+    public OverlayUi(Configuration configuration)
+    {
+        this.configuration = configuration;
+    }
+
     public void Draw()
     {
         // figure out where the PF window is, or quit if not visible
@@ -38,10 +45,10 @@ public class OverlayUi : IDisposable
                         ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoScrollWithMouse |
                         ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoBackground))
         {
-            var b = Dalamud.Configuration.PartyMakeupFilter;
+            var b = configuration.PartyMakeupFilter;
             if (ImGui.Checkbox("Show only parties you can join", ref b))
             {
-                Dalamud.Configuration.PartyMakeupFilter = b;
+                configuration.PartyMakeupFilter = b;
             }
         }
 

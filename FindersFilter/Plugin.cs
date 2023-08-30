@@ -2,6 +2,7 @@
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Gui.PartyFinder;
+using Dalamud.Game.Gui.PartyFinder.Types;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Interface.Windowing;
@@ -11,24 +12,24 @@ namespace FindersFilter;
 
 public class Dalamud
 {
-    public static void Initialize(DalamudPluginInterface pluginInterface)
-    {
-        pluginInterface.Create<Dalamud>();
-            
-    }
+    public static void Initialize(DalamudPluginInterface pluginInterface) => pluginInterface.Create<Dalamud>();
 
     [PluginService]
     public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
+
     [PluginService]
     public static CommandManager CommandManager { get; private set; } = null!;
+
     [PluginService]
     public static GameGui GameGui { get; private set; } = null!;
+
     [PluginService]
     public static PartyFinderGui PartyFinderGui { get; private set; } = null!;
+
     [PluginService]
     public static DataManager DataManager { get; private set; } = null!;
 }
-    
+
 // ReSharper disable once UnusedType.Global
 public sealed class Plugin : IDalamudPlugin
 {
@@ -38,20 +39,20 @@ public sealed class Plugin : IDalamudPlugin
     private ConfigWindow ConfigWindow { get; init; }
     private readonly OverlayUi overlayUi;
     public Configuration Configuration { get; set; }
-    private Filter filter;
-        
+    private readonly Filter filter;
+
     public Plugin(DalamudPluginInterface pluginInterface)
     {
         Dalamud.Initialize(pluginInterface);
-            
+
         this.Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
         // you might normally want to embed resources and load them from the manifest stream
 
-        ConfigWindow = new ConfigWindow(this.Configuration);
-        overlayUi = new OverlayUi();
-        filter = new Filter();
-            
+        ConfigWindow = new ConfigWindow(Configuration);
+        overlayUi = new OverlayUi(Configuration);
+        filter = new Filter(Configuration);
+
         windowSystem.AddWindow(ConfigWindow);
 
         Dalamud.CommandManager.AddHandler("/ffilter", new CommandInfo(OnCommand)
@@ -61,15 +62,23 @@ public sealed class Plugin : IDalamudPlugin
 
         pluginInterface.UiBuilder.Draw += DrawUI;
         pluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
+        Dalamud.PartyFinderGui.ReceiveListing += OnReceiveListing;
+    }
+
+    private void OnReceiveListing(PartyFinderListing listing, PartyFinderListingEventArgs args)
+    {
+        args.Visible = filter.AcceptsListing(listing);
     }
 
     public void Dispose()
     {
         this.windowSystem.RemoveAllWindows();
-            
+
         ConfigWindow.Dispose();
         overlayUi.Dispose();
-            
+
+        Dalamud.PartyFinderGui.ReceiveListing -= OnReceiveListing;
+
         Dalamud.CommandManager.RemoveHandler("/ffilter");
     }
 

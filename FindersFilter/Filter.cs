@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dalamud.Game.Gui.PartyFinder.Types;
@@ -8,20 +7,21 @@ using Lumina.Excel.GeneratedSheets;
 
 namespace FindersFilter;
 
-public class Filter : IDisposable
+public class Filter
 {
-    public Filter()
+    private readonly Configuration configuration;
+
+    public Filter(Configuration configuration)
     {
-        Dalamud.PartyFinderGui.ReceiveListing += OnReceiveListing;
+        this.configuration = configuration;
     }
 
-    private void OnReceiveListing(PartyFinderListing listing, PartyFinderListingEventArgs args)
+    public bool AcceptsListing(PartyFinderListing listing)
     {
-        if (!Dalamud.Configuration.PartyMakeupFilter) return;
+        if (!configuration.PartyMakeupFilter) return true;
         
         var members = FetchPartyJobs();
-        if (members != null && !ListingSatisfiedBy(listing, members.Select(j => j.JobFlags()).ToList()))
-            args.Visible = false;
+        return members == null || ListingSatisfiedBy(listing, members.Select(j => j.JobFlags()).ToList());
     }
 
     /// <summary>
@@ -67,32 +67,27 @@ public class Filter : IDisposable
     public static List<ClassJob>? FetchPartyJobs()
     {
         List<ClassJob> party;
-        
+
         unsafe
         {
             var infoModule = Framework.Instance()->GetUiModule()->GetInfoModule();
-            var partyInfoProxy = (InfoProxyParty*) infoModule->GetInfoProxyById(InfoProxyId.Party);
+            var partyInfoProxy = (InfoProxyParty*)infoModule->GetInfoProxyById(InfoProxyId.Party);
             if (partyInfoProxy == null)
                 return null;
-            
+
             party = new List<ClassJob>();
 
             for (uint i = 0; i < partyInfoProxy->InfoProxyCommonList.DataSize; ++i)
             {
                 var entry = partyInfoProxy->InfoProxyCommonList.GetEntry(i);
                 if (entry == null) continue;
-                
+
                 var job = Dalamud.DataManager.GetExcelSheet<ClassJob>()?.GetRow(entry->Job);
                 if (job != null) party.Add(job);
             }
         }
 
         return party;
-    }
-
-    public void Dispose()
-    {
-        Dalamud.PartyFinderGui.ReceiveListing -= OnReceiveListing;
     }
 }
 
