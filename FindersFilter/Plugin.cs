@@ -39,7 +39,7 @@ public sealed class Plugin : IDalamudPlugin
     private ConfigWindow ConfigWindow { get; init; }
     private readonly OverlayUi overlayUi;
     public Configuration Configuration { get; set; }
-    private readonly Filter filter;
+    private readonly IFilter currentFilter;
 
     public Plugin(DalamudPluginInterface pluginInterface)
     {
@@ -51,7 +51,7 @@ public sealed class Plugin : IDalamudPlugin
 
         ConfigWindow = new ConfigWindow(Configuration);
         overlayUi = new OverlayUi(Configuration);
-        filter = new Filter(Configuration);
+        currentFilter = new JoinableMakeupFilter(Configuration);
 
         windowSystem.AddWindow(ConfigWindow);
 
@@ -67,7 +67,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnReceiveListing(PartyFinderListing listing, PartyFinderListingEventArgs args)
     {
-        args.Visible = filter.AcceptsListing(listing);
+        args.Visible = currentFilter.AcceptsListing(listing);
     }
 
     public void Dispose()

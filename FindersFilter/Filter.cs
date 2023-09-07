@@ -7,19 +7,37 @@ using Lumina.Excel.GeneratedSheets;
 
 namespace FindersFilter;
 
-public class Filter
+public interface IFilter
+{
+    bool AcceptsListing(PartyFinderListing listing);
+}
+
+public class AggregateFilter : IFilter
+{
+    private readonly List<IFilter> filters;
+
+    public AggregateFilter(List<IFilter> filters)
+    {
+        this.filters = filters;
+    }
+
+    public virtual bool AcceptsListing(PartyFinderListing listing) =>
+        filters.All(filter => filter.AcceptsListing(listing));
+}
+
+public class JoinableMakeupFilter : IFilter
 {
     private readonly Configuration configuration;
 
-    public Filter(Configuration configuration)
+    public JoinableMakeupFilter(Configuration configuration)
     {
         this.configuration = configuration;
     }
 
-    public bool AcceptsListing(PartyFinderListing listing)
+    public virtual bool AcceptsListing(PartyFinderListing listing)
     {
         if (!configuration.PartyMakeupFilter) return true;
-        
+
         var members = FetchPartyJobs();
         return members == null || ListingSatisfiedBy(listing, members.Select(j => j.JobFlags()).ToList());
     }
