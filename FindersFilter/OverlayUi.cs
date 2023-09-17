@@ -1,5 +1,8 @@
 using System;
+using System.Linq.Expressions;
 using System.Numerics;
+using System.Reflection;
+using Dalamud.Interface;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using ImGuiNET;
 
@@ -36,6 +39,7 @@ public class OverlayUi : IDisposable
         // courtesy of Marketbuddy: https://github.com/chalkos/Marketbuddy/blob/3b54a3f9ab343cb3ccd3ae533abfb25cb87bcaa0/Marketbuddy/PluginUI.cs#L49 
         var hSpace = new Vector2(1, 0);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0f);
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, hSpace);
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, hSpace);
         ImGui.PushStyleVar(ImGuiStyleVar.ItemInnerSpacing, hSpace);
@@ -45,15 +49,34 @@ public class OverlayUi : IDisposable
                         ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoScrollWithMouse |
                         ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoBackground))
         {
-            var b = configuration.PartyMakeupFilter;
-            if (ImGui.Checkbox("Show only parties you can join", ref b))
-            {
-                configuration.PartyMakeupFilter = b;
-            }
+            FilterToggleButton(c => c.PartyMakeupFilter, "Show only parties you can join");
+        }
+        
+        ImGui.PopStyleVar(6);
+        ImGui.End();
+    }
+
+    private void FilterToggleButton(Expression<Func<Configuration, bool>> expr, string info)
+    {
+        var target = (MemberExpression)expr.Body;
+        var prop = (PropertyInfo)target.Member;
+        var b = (bool)prop.GetValue(configuration)!;
+        
+        ImGui.SameLine();
+        var style = ImGui.GetStyle().Colors;
+        ImGui.PushStyleColor(ImGuiCol.Text, b ? style[(int)ImGuiCol.CheckMark] : style[(int)ImGuiCol.TextDisabled]);
+        if (ImExt.IconSelectable(FontAwesomeIcon.DoorOpen, b))
+        {
+            prop.SetValue(configuration, !b);
         }
 
-        ImGui.PopStyleVar(5);
-        ImGui.End();
+        ImGui.PopStyleColor(1);
+
+        if (ImGui.IsItemHovered())
+        {
+            // b ? checkmark : ffxiv cross mark
+            ImGui.SetTooltip($"{(b ? '\u2713' : '\ue04c')} {info}");
+        }
     }
 
     public static unsafe AtkUnitBase* GetPartyFinderAddon()
