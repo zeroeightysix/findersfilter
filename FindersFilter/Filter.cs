@@ -3,13 +3,13 @@ using System.Linq;
 using Dalamud.Game.Gui.PartyFinder.Types;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI.Info;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 
 namespace FindersFilter;
 
 public interface IFilter
 {
-    bool AcceptsListing(PartyFinderListing listing);
+    bool AcceptsListing(IPartyFinderListing listing);
 }
 
 public class AggregateFilter : IFilter
@@ -21,7 +21,7 @@ public class AggregateFilter : IFilter
         this.filters = filters;
     }
 
-    public virtual bool AcceptsListing(PartyFinderListing listing) =>
+    public virtual bool AcceptsListing(IPartyFinderListing listing) =>
         filters.All(filter => filter.AcceptsListing(listing));
 }
 
@@ -34,7 +34,7 @@ public class JoinableMakeupFilter : IFilter
         this.configuration = configuration;
     }
 
-    public virtual bool AcceptsListing(PartyFinderListing listing)
+    public virtual bool AcceptsListing(IPartyFinderListing listing)
     {
         if (!configuration.PartyMakeupFilter) return true;
 
@@ -45,7 +45,7 @@ public class JoinableMakeupFilter : IFilter
     /// <summary>
     /// Check whether or not a PF entry can 'fit' the supplied list of jobs.
     /// </summary>
-    private static bool ListingSatisfiedBy(PartyFinderListing listing, List<JobFlags> players)
+    private static bool ListingSatisfiedBy(IPartyFinderListing listing, List<JobFlags> players)
     {
         // TODO: break down an alliance into its full parties? how does this work?
         if (listing[SearchAreaFlags.AllianceRaid]) return true;
@@ -88,20 +88,20 @@ public class JoinableMakeupFilter : IFilter
 
         unsafe
         {
-            var infoModule = Framework.Instance()->GetUiModule()->GetInfoModule();
-            var partyInfoProxy = (InfoProxyParty*)infoModule->GetInfoProxyById(InfoProxyId.Party);
+            var infoModule = Framework.Instance()->GetUIModule()->GetInfoModule();
+            var partyInfoProxy = (InfoProxyPartyMember*) infoModule->GetInfoProxyById(InfoProxyId.PartyMember);
             if (partyInfoProxy == null)
                 return null;
 
             party = new List<ClassJob>();
 
-            for (uint i = 0; i < partyInfoProxy->InfoProxyCommonList.DataSize; ++i)
+            for (uint i = 0; i < partyInfoProxy->EntryCount; ++i)
             {
-                var entry = partyInfoProxy->InfoProxyCommonList.GetEntry(i);
+                var entry = partyInfoProxy->GetEntry(i);
                 if (entry == null) continue;
 
                 var job = Dalamud.DataManager.GetExcelSheet<ClassJob>()?.GetRow(entry->Job);
-                if (job != null) party.Add(job);
+                if (job != null) party.Add((ClassJob)job);
             }
         }
 

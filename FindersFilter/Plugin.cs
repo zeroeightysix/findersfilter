@@ -6,28 +6,29 @@ using Dalamud.Game.Gui.PartyFinder.Types;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Interface.Windowing;
+using Dalamud.Plugin.Services;
 using FindersFilter.Windows;
 
 namespace FindersFilter;
 
 public class Dalamud
 {
-    public static void Initialize(DalamudPluginInterface pluginInterface) => pluginInterface.Create<Dalamud>();
+    public static void Initialize(IDalamudPluginInterface pluginInterface) => pluginInterface.Create<Dalamud>();
 
     [PluginService]
-    public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
+    public static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
 
     [PluginService]
-    public static CommandManager CommandManager { get; private set; } = null!;
+    public static ICommandManager CommandManager { get; private set; } = null!;
 
     [PluginService]
-    public static GameGui GameGui { get; private set; } = null!;
+    public static IGameGui GameGui { get; private set; } = null!;
 
     [PluginService]
-    public static PartyFinderGui PartyFinderGui { get; private set; } = null!;
+    public static IPartyFinderGui PartyFinderGui { get; private set; } = null!;
 
     [PluginService]
-    public static DataManager DataManager { get; private set; } = null!;
+    public static IDataManager DataManager { get; private set; } = null!;
 }
 
 // ReSharper disable once UnusedType.Global
@@ -41,7 +42,7 @@ public sealed class Plugin : IDalamudPlugin
     public Configuration Configuration { get; set; }
     private readonly IFilter currentFilter;
 
-    public Plugin(DalamudPluginInterface pluginInterface)
+    public Plugin(IDalamudPluginInterface pluginInterface)
     {
         Dalamud.Initialize(pluginInterface);
 
@@ -65,7 +66,7 @@ public sealed class Plugin : IDalamudPlugin
         Dalamud.PartyFinderGui.ReceiveListing += OnReceiveListing;
     }
 
-    private void OnReceiveListing(PartyFinderListing listing, PartyFinderListingEventArgs args)
+    private void OnReceiveListing(IPartyFinderListing listing, IPartyFinderListingEventArgs args)
     {
         args.Visible = currentFilter.AcceptsListing(listing);
     }

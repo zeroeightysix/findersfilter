@@ -2,9 +2,9 @@ using System;
 using System.Linq.Expressions;
 using System.Numerics;
 using System.Reflection;
+using Dalamud.Bindings.ImGui;
+using Dalamud.Game.NativeWrapper;
 using Dalamud.Interface;
-using FFXIVClientStructs.FFXIV.Component.GUI;
-using ImGuiNET;
 
 namespace FindersFilter;
 
@@ -26,10 +26,10 @@ public class OverlayUi : IDisposable
         unsafe
         {
             var pfAddon = GetPartyFinderAddon();
-            if (pfAddon == null || !pfAddon->IsVisible) return;
+            if (pfAddon == null || !pfAddon.IsVisible) return;
 
-            pfX = pfAddon->X;
-            pfY = pfAddon->Y;
+            pfX = pfAddon.X;
+            pfY = pfAddon.Y;
         }
 
         // Offsets are found experimentally. The window should begin next to the "Party Finder" title.
@@ -79,10 +79,10 @@ public class OverlayUi : IDisposable
         }
     }
 
-    public static unsafe AtkUnitBase* GetPartyFinderAddon()
+    public static unsafe AtkUnitBasePtr GetPartyFinderAddon()
     {
         var addon = Dalamud.GameGui.GetAddonByName("LookingForGroup");
-        if (addon != IntPtr.Zero) return (AtkUnitBase*)addon;
+        if (addon != IntPtr.Zero) return addon;
         return null;
     }
 
